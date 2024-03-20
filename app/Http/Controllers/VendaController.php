@@ -70,7 +70,7 @@ class VendaController extends Controller
             ]);
         }
 
-        return redirect("/vendas/nova")->with("success", "Venda cadastrada com sucesso!");
+        return redirect("/vendas/nova")->with("success", "Venda cadastrada com sucesso!")->with("id", $venda->id);
     }
 
     /**
@@ -132,6 +132,27 @@ class VendaController extends Controller
      */
     public function update(UpdateVendaRequest $request, Venda $venda)
     {
+        if ($request["id-venda"]) {
+            $currentDate = date('Y-m-d');
+            $parcelas = array();
+
+            foreach ($request->parcelas as $parcelaSerializada) {
+                array_push($parcelas, json_decode($parcelaSerializada));
+            }
+
+            $venda->update([
+                "nome_cliente" => $request->nomeCliente,
+                "tipo_pagamento" => $request["tipo-pagamento"],
+                "valor_integral" => $request["valor-integral"],
+                "data_de_registro" => $currentDate
+            ]);
+
+            foreach ($parcelas as $parcela) {
+                DB::table("parcelas")->where("venda_id", "=", $request["id-venda"])
+                    ->update(["valor" => $parcela->valor, "tipo_pagamento" => $parcela->tipo, "data_vencimento" => $parcela->data]);
+            }
+        }
+
         $venda->update([
             "data_de_registro" => $request["data-de-registro"],
             "nome_cliente" => $request->nomeCliente,
@@ -158,23 +179,23 @@ class VendaController extends Controller
         $tipoPagamento = $request->input('filtro-tipo-pagamento');
         $tabela = DB::table("vendas");
 
-        if($nomeCliente && $tipoPagamento) {
+        if ($nomeCliente && $tipoPagamento) {
             $result = $tabela->select("*")
-            ->where("nome_cliente", "like", "%" . $nomeCliente . "%")
-            ->where("tipo_pagamento", "=", $tipoPagamento)
-            ->get();
+                ->where("nome_cliente", "like", "%" . $nomeCliente . "%")
+                ->where("tipo_pagamento", "=", $tipoPagamento)
+                ->get();
         }
 
         if ($nomeCliente) {
             $result = $tabela->select("*")
-            ->where("nome_cliente", "like", "%" . $nomeCliente . "%")
-            ->get();
+                ->where("nome_cliente", "like", "%" . $nomeCliente . "%")
+                ->get();
         }
 
         if ($tipoPagamento) {
             $result = $tabela->select("*")
-            ->where("tipo_pagamento", "=", $tipoPagamento)
-            ->get();
+                ->where("tipo_pagamento", "=", $tipoPagamento)
+                ->get();
         }
 
         return view("vendas.index", [

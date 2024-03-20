@@ -1,5 +1,7 @@
 <x-layout>
     <div class="container mt-3 mb-5">
+        <input id="id-venda-session" value="{{ Session::get('id') ?? '' }}" type="number" hidden>
+
         @if (Session::has('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
                 {{ Session::get('success') }}
@@ -153,15 +155,16 @@
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label for="data-vencimento-editado" class="form-label" style="display: block">Data vencimento</label>
+                            <label for="data-vencimento-editado" class="form-label" style="display: block">Data
+                                vencimento</label>
                             <input value="" type="date" name="data-vencimento-editado"
                                 id="data-vencimento-editado"
                                 style="padding: 8px 10px; border: 1px solid #ced4da; border-radius: 0.25rem">
                         </div>
                         <div class="mb-3">
                             <label for="valor-parcela-editado" class="form-label">Valor parcela</label>
-                            <input value="" step="0.000001" type="number" name="valor-parcela-editado" class="form-control"
-                                id="valor-parcela-editado">
+                            <input value="" step="0.000001" type="number" name="valor-parcela-editado"
+                                class="form-control" id="valor-parcela-editado">
                         </div>
                         <div class="mb-3">
                             <label for="tipo-pagamento-editado" class="mb-2">Tipo de pagamento</label>
@@ -343,8 +346,12 @@
                 </div>
             </div>
             <input name="valor-integral" type="number" hidden>
+            <input name="id-venda" type="number" hidden>
 
-            <button id="salvar-venda" type="submit" class="btn btn-primary text-center mt-4">Salvar venda</button>
+            <button id="salvar-venda" type="submit" class="btn btn-primary text-center mt-4 me-3">Salvar
+                venda</button>
+            <button onclick="limparDados()" id="limpar-dados" type="button"
+                class="btn btn-outline-primary text-center mt-4">Limpar dados</button>
         </form>
     </div>
 </x-layout>
@@ -370,6 +377,8 @@
     const valorIntegral = document.querySelector("input[name='valor-integral']");
     const parcelasInput = document.querySelector("input[name='parcelas[]']");
     const vendasForm = document.getElementById("vendas-form");
+    const idVendaSessionInput = document.getElementById("id-venda-session");
+    const idVendaInput = document.querySelector("input[name='id-venda']");
 
     const nomeProdutoEditar = document.querySelector("input[name='nome-produto']");
     const quantidadeProdutoEditar = document.querySelector("input[name='quantidade-produto']");
@@ -383,15 +392,29 @@
     let dadosProduto;
     let precoTotal = 0;
     let precoTotalParcelas;
-    const produtosSelecionados = [];
+    let produtosSelecionados = [];
     let parcelas = [];
     let produtoEditar;
+    let idVenda;
+
+    function limparDados() {
+        localStorage.removeItem("parcelas");
+        localStorage.removeItem("itens");
+        localStorage.removeItem("id_venda");
+        parcelas = [];
+        produtosSelecionados = [];
+        qtdParcelasInput.value = 1;
+        precoTotal = 0;
+        valorIntegral.value = precoTotal;
+        valorParcelaInput.value = 0;
+        alteraTabela();
+        alteraTabelaParcelas();
+    }
 
     function salvarVenda(e) {
         valorIntegral.value = precoTotal;
 
         parcelas.forEach(parcela => {
-            console.log(parcela);
             const inputParcela = document.createElement("input");
             inputParcela.setAttribute("name", "parcelas[]");
             inputParcela.setAttribute("hidden", "");
@@ -402,6 +425,9 @@
         if (validaValores()) {
             e.preventDefault();
         }
+
+        localStorage.setItem("parcelas", JSON.stringify(parcelas));
+        localStorage.setItem("itens", JSON.stringify(produtosSelecionados));
     }
 
     function validaValores() {
@@ -637,4 +663,34 @@
 
         calculaSubtotal();
     }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        if (localStorage.getItem("parcelas") && localStorage.getItem("itens")) {
+            parcelas = JSON.parse(localStorage.getItem("parcelas"));
+            produtosSelecionados = JSON.parse(localStorage.getItem("itens"));
+
+            alteraTabela();
+            alteraTabelaParcelas();
+            calculaPrecoTotal();
+            calculaPrecoTotalParcelas();
+
+            localStorage.setItem("id_venda", idVendaSessionInput.value);
+        }
+
+        if (localStorage.getItem("id_venda")) {
+            idVendaInput.value = localStorage.getItem("id_venda");
+            selectProduto.removeAttribute("required");
+            const requiredElements = document.querySelectorAll("input[required]");
+            requiredElements.forEach(element => {
+                element.removeAttribute("required")
+            });
+
+            vendasForm.setAttribute("action", `/vendas/${localStorage.getItem("id_venda")}`);
+            let diretivaMetodo = document.createElement("input");
+            diretivaMetodo.setAttribute("hidden", "");
+            diretivaMetodo.setAttribute("name", "_method");
+            diretivaMetodo.setAttribute("value", "PUT");
+            vendasForm.children[0].insertAdjacentElement("afterend", diretivaMetodo);
+        }
+    })
 </script>
