@@ -26,8 +26,12 @@
     <!-- Styles -->
 </head>
 
-<body class="antialiased">
-    Aqui vai ser o login
+<body class="antialiased" style="height: 100vh">
+    <div class="container" style="display: grid; place-items: center;">
+        <h4>Teste para vaga de desenvolvedor</h4>
+        <p>Site para registrar vendas e suas parcelas, clientes e produtos.</p>
+        <a class="btn btn-primary" href="/vendas">Começar</a>
+    </div>
 </body>
 
 </html>

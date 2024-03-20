@@ -16,6 +16,10 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::get("/", function () {
+    return view("welcome");
+});
+
 Route::prefix('vendas')->group(function () {
     Route::get('/', [VendaController::class, 'index'])->name('vendas.index');
     Route::get('/nova', [VendaController::class, 'create'])->name('vendas.create');
