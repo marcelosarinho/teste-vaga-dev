@@ -185,7 +185,7 @@
             </div>
         </div>
 
-        <form onsubmit="salvarVenda(event)" method="POST" action="/vendas/nova">
+        <form id="vendas-form" onsubmit="salvarVenda(event)" method="POST" action="/vendas/nova">
             @csrf
 
             <div>
@@ -368,6 +368,8 @@
     const tableParcelaBody = document.getElementById("table-parcela-body");
     const salvarVendaButton = document.getElementById("salvar-venda");
     const valorIntegral = document.querySelector("input[name='valor-integral']");
+    const parcelasInput = document.querySelector("input[name='parcelas[]']");
+    const vendasForm = document.getElementById("vendas-form");
 
     const nomeProdutoEditar = document.querySelector("input[name='nome-produto']");
     const quantidadeProdutoEditar = document.querySelector("input[name='quantidade-produto']");
@@ -387,6 +389,15 @@
 
     function salvarVenda(e) {
         valorIntegral.value = precoTotal;
+
+        parcelas.forEach(parcela => {
+            console.log(parcela);
+            const inputParcela = document.createElement("input");
+            inputParcela.setAttribute("name", "parcelas[]");
+            inputParcela.setAttribute("hidden", "");
+            vendasForm.append(inputParcela);
+            inputParcela.value = JSON.stringify(parcela);
+        })
 
         if (validaValores()) {
             e.preventDefault();

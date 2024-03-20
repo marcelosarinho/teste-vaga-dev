@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreVendaRequest;
 use App\Http\Requests\UpdateVendaRequest;
 use App\Models\Cliente;
+use App\Models\Parcela;
 use App\Models\Produto;
 use App\Models\Venda;
 use Illuminate\Http\Request;
@@ -45,14 +46,29 @@ class VendaController extends Controller
      */
     public function store(StoreVendaRequest $request)
     {
+        $parcelas = array();
+
+        foreach ($request->parcelas as $parcelaSerializada) {
+            array_push($parcelas, json_decode($parcelaSerializada));
+        }
+
         $currentDate = date('Y-m-d');
 
-        Venda::create([
+        $venda = Venda::create([
             "data_de_registro" => $currentDate,
             "nome_cliente" => $request->nomeCliente,
             "tipo_pagamento" => $request["tipo-pagamento"],
             "valor_integral" => $request["valor-integral"],
         ]);
+
+        foreach ($parcelas as $parcela) {
+            Parcela::create([
+                "valor" => $parcela->valor,
+                "tipo_pagamento" => strtoupper($parcela->tipo),
+                "venda_id" => $venda->id,
+                "data_vencimento" => $parcela->data,
+            ]);
+        }
 
         return redirect("/vendas/nova")->with("success", "Venda cadastrada com sucesso!");
     }
