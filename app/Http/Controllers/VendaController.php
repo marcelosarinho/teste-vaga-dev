@@ -147,10 +147,31 @@ class VendaController extends Controller
                 "data_de_registro" => $currentDate
             ]);
 
-            foreach ($parcelas as $parcela) {
-                DB::table("parcelas")->where("venda_id", "=", $request["id-venda"])
-                    ->update(["valor" => $parcela->valor, "tipo_pagamento" => $parcela->tipo, "data_vencimento" => $parcela->data]);
+            $parcelasExistentes = Parcela::all()->where("venda_id", "=", $request["id-venda"]);
+
+            $count = 0;
+            foreach ($parcelasExistentes as $parcelaExistente) {
+                $parcelaExistente->update([
+                    "valor" => $parcelas[$count]->valor,
+                    "tipo_pagamento" => strtoupper($parcelas[$count]->tipo),
+                    "data_vencimento" => $parcelas[$count]->data,
+                ]);
+                array_splice($parcelas, 0, 1);
+                $count++;
             }
+
+            if(count($parcelas) > 0) {
+                foreach ($parcelas as $parcela) {
+                    Parcela::create([
+                        "valor" => $parcela->valor,
+                        "tipo_pagamento" => strtoupper($parcela->tipo),
+                        "venda_id" => $venda->id,
+                        "data_vencimento" => $parcela->data,
+                    ]);
+                }
+            }
+
+            return redirect("/vendas/nova")->with("success", "Venda atualizada com sucesso!");
         }
 
         $venda->update([

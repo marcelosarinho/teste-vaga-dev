@@ -395,7 +395,6 @@
     let produtosSelecionados = [];
     let parcelas = [];
     let produtoEditar;
-    let idVenda;
 
     function limparDados() {
         localStorage.removeItem("parcelas");
@@ -409,6 +408,7 @@
         valorParcelaInput.value = 0;
         alteraTabela();
         alteraTabelaParcelas();
+        window.location.reload();
     }
 
     function salvarVenda(e) {
@@ -674,7 +674,9 @@
             calculaPrecoTotal();
             calculaPrecoTotalParcelas();
 
-            localStorage.setItem("id_venda", idVendaSessionInput.value);
+            if(!localStorage.getItem("id_venda")) {
+                localStorage.setItem("id_venda", idVendaSessionInput.value);
+            }
         }
 
         if (localStorage.getItem("id_venda")) {
